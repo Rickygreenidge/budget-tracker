@@ -64,16 +64,31 @@ def home():
                 <tr><th>Category</th><th>Total ($)</th></tr>
             </thead>
             <tbody>
-                    {% for category, total in category_totals.items() %}
-                    <tr><td>{{ category }}</td><td>{{ "%.2f"|format(total) }}</td></tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-        
-                <h2>Overall Total</h2>
-                <div class="alert alert-info">
-                    <strong>Total Spent: ${{ "%.2f"|format(overall_total) }}</strong>
-                </div>
-            </body>
-            </html>
-            """
+            {% for category, total in category_totals.items() %}
+            <tr><td>{{ category }}</td><td>{{ "%.2f"|format(total) }}</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+
+        <h2 class="mt-4">Overall Total Spending: <span class="text-success">${{ "%.2f"|format(overall_total) }}</span></h2>
+
+    </body>
+    </html>
+    """
+
+    return render_template_string(html, expenses=expenses, category_totals=category_totals, overall_total=overall_total)
+
+@app.route("/add", methods=["POST"])
+def add_expense():
+    name = request.form["name"]
+    category = request.form["category"]
+    amount = request.form["amount"]
+    date = datetime.now().strftime("%Y-%m-%d %H:%M")
+    with open(FILENAME, mode='a', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow([date, name, category, amount])
+    return redirect(url_for('home'))
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))  # ✅ Render port binding fix
+    app.run(debug=True, host="0.0.0.0", port=port)
