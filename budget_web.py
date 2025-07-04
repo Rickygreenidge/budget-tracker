@@ -1,31 +1,39 @@
 from flask import Flask, render_template_string, request, redirect, url_for
-import csv
-import os
-from collections import defaultdict
+from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+import os
 
 app = Flask(__name__)
-FILENAME = "expenses.csv"
+
+# Database configuration
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///expenses.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
+
+# Database models
+class Expense(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False)
+    category = db.Column(db.String(50), nullable=False)
+    amount = db.Column(db.Float, nullable=False)
+    date = db.Column(db.String(50), default=datetime.now().strftime("%Y-%m-%d %H:%M"))
+
+# Create tables if they don't exist
+with app.app_context():
+    db.create_all()
 
 @app.route("/", methods=["GET"])
 def home():
-    expenses = []
-    category_totals = defaultdict(float)
+    expenses = Expense.query.order_by(Expense.id.desc()).all()
+    category_totals = {}
     overall_total = 0
 
-    if os.path.exists(FILENAME):
-        with open(FILENAME, mode='r') as file:
-            reader = csv.reader(file)
-            for row in reader:
-                if len(row) == 4:
-                    date, name, category, amount = row
-                    amount = float(amount)
-                    expenses.append((date, name, category, amount))
-                    category_totals[category] += amount
-                    overall_total += amount
-
-    # Show most recent expenses first
-    expenses = expenses[::-1]
+    for exp in expenses:
+        overall_total += exp.amount
+        if exp.category in category_totals:
+            category_totals[exp.category] += exp.amount
+        else:
+            category_totals[exp.category] = exp.amount
 
     html = """
     <!DOCTYPE html>
@@ -36,7 +44,7 @@ def home():
     </head>
     <body class="container mt-4">
 
-        <h1 class="mb-4">💰 Budget Tracker</h1>
+        <h1 class="mb-4">💰 Budget Tracker (SQLite)</h1>
 
         <h2>Add Expense</h2>
         <form method="post" action="/add" class="form-inline mb-4">
@@ -49,11 +57,19 @@ def home():
         <h2>All Expenses</h2>
         <table class="table table-striped">
             <thead>
-                <tr><th>Date</th><th>Name</th><th>Category</th><th>Amount ($)</th></tr>
+                <tr><th>Date</th><th>Name</th><th>Category</th><th>Amount ($)</th><th>Actions</th></tr>
             </thead>
             <tbody>
-            {% for date, name, category, amount in expenses %}
-            <tr><td>{{ date }}</td><td>{{ name }}</td><td>{{ category }}</td><td>{{ amount }}</td></tr>
+            {% for exp in expenses %}
+            <tr>
+                <td>{{ exp.date }}</td>
+                <td>{{ exp.name }}</td>
+                <td>{{ exp.category }}</td>
+                <td>{{ "%.2f"|format(exp.amount) }}</td>
+                <td>
+                    <a href="/delete/{{ exp.id }}" class="btn btn-sm btn-danger" onclick="return confirm('Delete this expense?');">Delete</a>
+                </td>
+            </tr>
             {% endfor %}
             </tbody>
         </table>
@@ -82,13 +98,20 @@ def home():
 def add_expense():
     name = request.form["name"]
     category = request.form["category"]
-    amount = request.form["amount"]
+    amount = float(request.form["amount"])
     date = datetime.now().strftime("%Y-%m-%d %H:%M")
-    with open(FILENAME, mode='a', newline='') as file:
-        writer = csv.writer(file)
-        writer.writerow([date, name, category, amount])
+    new_expense = Expense(name=name, category=category, amount=amount, date=date)
+    db.session.add(new_expense)
+    db.session.commit()
+    return redirect(url_for('home'))
+
+@app.route("/delete/<int:expense_id>")
+def delete_expense(expense_id):
+    expense = Expense.query.get_or_404(expense_id)
+    db.session.delete(expense)
+    db.session.commit()
     return redirect(url_for('home'))
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))  # ✅ Render port binding fix
+    port = int(os.environ.get("PORT", 5000))
     app.run(debug=True, host="0.0.0.0", port=port)
