@@ -94,6 +94,7 @@ def home():
                 <td>{{ exp.category }}</td>
                 <td>{{ "%.2f"|format(exp.amount) }}</td>
                 <td>
+                  <a href="/edit/{{ exp.id }}" class="btn btn-sm btn-info">Edit</a>
                   <a href="/delete/{{ exp.id }}" class="btn btn-sm btn-danger" onclick="return confirm('Delete this expense?');">Delete</a>
                 </td>
               </tr>
@@ -149,6 +150,46 @@ def add_expense():
     db.session.add(new_expense)
     db.session.commit()
     return redirect(url_for('home'))
+
+@app.route("/edit/<int:expense_id>", methods=["GET", "POST"])
+def edit_expense(expense_id):
+    expense = Expense.query.get_or_404(expense_id)
+    if request.method == "POST":
+        expense.name = request.form["name"]
+        expense.category = request.form["category"]
+        expense.amount = float(request.form["amount"])
+        db.session.commit()
+        return redirect(url_for('home'))
+    else:
+        html = """
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Edit Expense</title>
+            <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+        </head>
+        <body class="container mt-4">
+            <h2>Edit Expense</h2>
+            <form method="post" class="mb-4">
+                <div class="form-group">
+                    <label>Name</label>
+                    <input type="text" name="name" value="{{ expense.name }}" required class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <input type="text" name="category" value="{{ expense.category }}" required class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Amount</label>
+                    <input type="number" step="0.01" name="amount" value="{{ expense.amount }}" required class="form-control">
+                </div>
+                <button type="submit" class="btn btn-primary">Update</button>
+                <a href="/" class="btn btn-secondary">Cancel</a>
+            </form>
+        </body>
+        </html>
+        """
+        return render_template_string(html, expense=expense)
 
 @app.route("/delete/<int:expense_id>")
 def delete_expense(expense_id):
