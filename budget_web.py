@@ -17,10 +17,10 @@ def home():
         with open(FILENAME, mode='r') as file:
             reader = csv.reader(file)
             for row in reader:
-                if len(row) == 3:
-                    date, category, amount = row
+                if len(row) == 4:
+                    date, name, category, amount = row
                     amount = float(amount)
-                    expenses.append((date, category, amount))
+                    expenses.append((date, name, category, amount))
                     category_totals[category] += amount
                     overall_total += amount
 
@@ -40,6 +40,7 @@ def home():
 
         <h2>Add Expense</h2>
         <form method="post" action="/add" class="form-inline mb-4">
+            <input type="text" name="name" placeholder="Your Name" required class="form-control mr-2">
             <input type="text" name="category" placeholder="Category" required class="form-control mr-2">
             <input type="number" step="0.01" name="amount" placeholder="Amount" required class="form-control mr-2">
             <button type="submit" class="btn btn-primary">Add</button>
@@ -48,11 +49,11 @@ def home():
         <h2>All Expenses</h2>
         <table class="table table-striped">
             <thead>
-                <tr><th>Date</th><th>Category</th><th>Amount ($)</th></tr>
+                <tr><th>Date</th><th>Name</th><th>Category</th><th>Amount ($)</th></tr>
             </thead>
             <tbody>
-            {% for date, category, amount in expenses %}
-            <tr><td>{{ date }}</td><td>{{ category }}</td><td>{{ amount }}</td></tr>
+            {% for date, name, category, amount in expenses %}
+            <tr><td>{{ date }}</td><td>{{ name }}</td><td>{{ category }}</td><td>{{ amount }}</td></tr>
             {% endfor %}
             </tbody>
         </table>
@@ -63,30 +64,16 @@ def home():
                 <tr><th>Category</th><th>Total ($)</th></tr>
             </thead>
             <tbody>
-            {% for category, total in category_totals.items() %}
-            <tr><td>{{ category }}</td><td>{{ "%.2f"|format(total) }}</td></tr>
-            {% endfor %}
-            </tbody>
-        </table>
-
-        <h2 class="mt-4">Overall Total Spending: <span class="text-success">${{ "%.2f"|format(overall_total) }}</span></h2>
-
-    </body>
-    </html>
-    """
-
-    return render_template_string(html, expenses=expenses, category_totals=category_totals, overall_total=overall_total)
-
-@app.route("/add", methods=["POST"])
-def add_expense():
-    category = request.form["category"]
-    amount = request.form["amount"]
-    date = datetime.now().strftime("%Y-%m-%d %H:%M")
-    with open(FILENAME, mode='a', newline='') as file:
-        writer = csv.writer(file)
-        writer.writerow([date, category, amount])
-    return redirect(url_for('home'))
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(debug=True, host="0.0.0.0", port=port)
+                    {% for category, total in category_totals.items() %}
+                    <tr><td>{{ category }}</td><td>{{ "%.2f"|format(total) }}</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+        
+                <h2>Overall Total</h2>
+                <div class="alert alert-info">
+                    <strong>Total Spent: ${{ "%.2f"|format(overall_total) }}</strong>
+                </div>
+            </body>
+            </html>
+            """
