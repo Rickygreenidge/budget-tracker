@@ -1,14 +1,21 @@
 from flask import Flask, render_template_string, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from datetime import datetime
 import os
 
 app = Flask(__name__)
+app.secret_key = "secretkey"  # required for session management
 
 # Database configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///expenses.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
+
+# Flask-Login configuration
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = "login"
 
 # Database models
 class Expense(db.Model):
@@ -17,14 +24,27 @@ class Expense(db.Model):
     category = db.Column(db.String(50), nullable=False)
     amount = db.Column(db.Float, nullable=False)
     date = db.Column(db.String(50), default=datetime.now().strftime("%Y-%m-%d %H:%M"))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+
+class User(UserMixin, db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(150), unique=True, nullable=False)
+    password = db.Column(db.String(150), nullable=False)
+    expenses = db.relationship('Expense', backref='user')
+
+# User loader
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
 
 # Create tables if they don't exist
 with app.app_context():
     db.create_all()
 
 @app.route("/", methods=["GET"])
+@login_required
 def home():
-    expenses = Expense.query.order_by(Expense.id.desc()).all()
+    expenses = Expense.query.filter_by(user_id=current_user.id).order_by(Expense.id.desc()).all()
     category_totals = {}
     overall_total = 0
 
@@ -59,8 +79,7 @@ def home():
           <h4 class="text-white">💰 Tracker</h4>
           <ul class="nav flex-column">
             <li class="nav-item"><a href="/" class="nav-link active">Dashboard</a></li>
-            <li class="nav-item"><a href="/" class="nav-link">Expenses</a></li>
-            <li class="nav-item"><a href="/" class="nav-link">Settings</a></li>
+            <li class="nav-item"><a href="/logout" class="nav-link">Logout</a></li>
           </ul>
         </nav>
 
@@ -124,12 +143,6 @@ def home():
             <h3 class="text-success">${{ "%.2f"|format(overall_total) }}</h3>
           </div>
 
-          <!-- Placeholder for Future Charts -->
-          <div class="card mb-4 p-3">
-            <h4>Spending Graph (Coming Soon)</h4>
-            <p class="text-muted">Charts and visual insights will appear here.</p>
-          </div>
-
         </main>
       </div>
     </div>
@@ -141,17 +154,19 @@ def home():
     return render_template_string(html, expenses=expenses, category_totals=category_totals, overall_total=overall_total)
 
 @app.route("/add", methods=["POST"])
+@login_required
 def add_expense():
     name = request.form["name"]
     category = request.form["category"]
     amount = float(request.form["amount"])
     date = datetime.now().strftime("%Y-%m-%d %H:%M")
-    new_expense = Expense(name=name, category=category, amount=amount, date=date)
+    new_expense = Expense(name=name, category=category, amount=amount, date=date, user_id=current_user.id)
     db.session.add(new_expense)
     db.session.commit()
     return redirect(url_for('home'))
 
 @app.route("/edit/<int:expense_id>", methods=["GET", "POST"])
+@login_required
 def edit_expense(expense_id):
     expense = Expense.query.get_or_404(expense_id)
     if request.method == "POST":
@@ -192,11 +207,18 @@ def edit_expense(expense_id):
         return render_template_string(html, expense=expense)
 
 @app.route("/delete/<int:expense_id>")
+@login_required
 def delete_expense(expense_id):
     expense = Expense.query.get_or_404(expense_id)
     db.session.delete(expense)
     db.session.commit()
     return redirect(url_for('home'))
+
+@app.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('login'))
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
