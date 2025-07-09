@@ -1,0 +1,4 @@
+C:\Users\Ricky\Desktop\Tinker
+venv\Scripts\activate
+python budget_web.py
+

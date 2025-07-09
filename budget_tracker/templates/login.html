@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="center-container">
+    <form method="post" class="login-box">
+        <h2>Login</h2>
+        {% if error %}<div class="err">{{ error }}</div>{% endif %}
+        <input name="username" placeholder="Username" required class="input-dark" autocomplete="username">
+        <input name="password" placeholder="Password" type="password" required class="input-dark" autocomplete="current-password">
+        <button type="submit" class="btn-main">Login</button>
+        <div class="form-links">
+            <span>No account? <a href="{{ url_for('register') }}">Register</a></span>
+            <span style="margin-left: 1rem;"><a href="{{ url_for('forgot_password') }}">Forgot password?</a></span>
+        </div>
+    </form>
+</div>
+<style>
+.center-container {
+    display: flex; justify-content: center; align-items: center; height: 90vh;
+}
+.login-box {
+    background: #28292c;
+    border-radius: 16px;
+    box-shadow: 0 4px 32px rgba(0,0,0,.16);
+    padding: 2.5rem 2rem;
+    min-width: 350px;
+    max-width: 95vw;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+h2 {
+    font-size: 2.1rem; margin-bottom: 1.7rem; font-weight: 700;
+}
+.err {
+    color: #e2564a; margin-bottom: 18px;
+}
+.input-dark {
+    background: #18191b;
+    color: #fff;
+    border: 1.5px solid #444ce7;
+    border-radius: 10px;
+    padding: 0.65rem 1.1rem;
+    margin-bottom: 1.3rem;
+    font-size: 1.05rem;
+    width: 92%;
+    outline: none;
+    transition: border .22s;
+}
+.input-dark:focus { border: 1.5px solid #44d964; }
+.btn-main {
+    background: #444ce7;
+    color: #fff;
+    border: none;
+    padding: 0.7rem 1.4rem;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    margin-top: .5rem;
+    width: 100%;
+}
+.btn-main:hover { background: #393fb3; }
+.form-links {
+    margin-top: 1.3rem;
+    font-size: 1rem;
+    color: #bbb;
+    width: 100%;
+    text-align: center;
+}
+.form-links a {
+    color: #8f97ff;
+    text-decoration: underline;
+}
+</style>
+{% endblock %}

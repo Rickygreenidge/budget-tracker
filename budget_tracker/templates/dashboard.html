@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="navbar" id="navbar">
+    <button class="menu-btn" id="menuBtn" onclick="toggleSidebar()" aria-label="Menu">
+        <span class="menu-icon">&#9776;</span>
+    </button>
+    <span class="nav-title">Dashboard</span>
+</div>
+<nav class="sidebar" id="sidebar" aria-label="Sidebar">
+    <div class="slogo">Budget Tracker</div>
+    <div class="username">Logged in as:<br>{{ current_user.username }}</div>
+    <a href="/" class="active slink">Dashboard</a>
+    <a href="/reset_password" class="slink resetpw">Reset Password</a>
+    <a href="/logout" class="logout slink">Logout</a>
+</nav>
+<div class="main-content" id="main-content">
+    <div class="dashboard-section row">
+        <div class="card col2">
+            <h2>Add/Update Income</h2>
+            <form method="POST" action="{{ url_for('add_income') }}" style="display:flex;flex-wrap:wrap;align-items:center;">
+                <input name="amount" class="input-dark" type="number" step="0.01" min="0" placeholder="Income Amount" required autocomplete="off">
+                <button type="submit" class="btn-main">Add/Update</button>
+                <button type="button" class="btn-red" onclick="confirmResetIncome()">Reset Income</button>
+            </form>
+            <div style="margin-top:0.8rem;">Current Total Income: <span style="color:#44d964;font-weight:700;">${{ '{:,.2f}'.format(total_income) }}</span></div>
+        </div>
+        <div class="card col2 slim">
+            <h2 style="margin-bottom:.8rem;">Remaining Balance</h2>
+            <div class="spending">${{ '{:,.2f}'.format(remaining) }}</div>
+            <div style="font-size:1rem;color:#aaa;">Income minus all expenses</div>
+        </div>
+    </div>
+    <div class="dashboard-section card">
+        <h2>Add Expense</h2>
+        <form method="POST" action="{{ url_for('add_expense') }}" style="display:flex;flex-wrap:wrap;align-items:center;">
+            <select name="category" class="input-dark category-select" required>
+                <option value="">Select Category</option>
+                {% for cat in categories %}
+                <option value="{{cat}}">{{cat}}</option>
+                {% endfor %}
+            </select>
+            <input name="amount" class="input-dark" type="number" step="0.01" min="0" placeholder="Amount" required autocomplete="off">
+            <input name="description" class="input-dark" type="text" maxlength="100" placeholder="Description (memo)">
+            <button type="submit" class="btn-main">Add</button>
+        </form>
+    </div>
+    <div class="dashboard-section row">
+        <div class="card col1">
+            <h2>All Expenses</h2>
+            <table>
+                <tr>
+                    <th>Date</th>
+                    <th>Category</th>
+                    <th>Amount ($)</th>
+                    <th>Description</th>
+                    <th>Actions</th>
+                </tr>
+                {% for e in expenses %}
+                <tr>
+                    <td>{{ e.date }}</td>
+                    <td>{{ e.category }}</td>
+                    <td>${{ '{:,.2f}'.format(e.amount) }}</td>
+                    <td>{{ e.description or "" }}</td>
+                    <td>
+                        <a href="/edit/{{ e.id }}" style="color:#44d964;">Edit</a>
+                        <a href="/delete/{{ e.id }}" style="color:#ff6464;margin-left:8px;">Delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+        <div class="col2">
+            <div class="card slim" style="margin-bottom:16px;">
+                <h2>Totals by Category</h2>
+                <table>
+                    <tr><th>Category</th><th>Total ($)</th></tr>
+                    {% for cat, total in totals_by_category.items() %}
+                    <tr>
+                        <td>{{ cat }}</td>
+                        <td>${{ '{:,.2f}'.format(total) }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
+            <div class="card slim" style="margin-bottom:16px;">
+                <h2>Overall Total Spending</h2>
+                <div class="spending-total">${{ '{:,.2f}'.format(total_spent) }}</div>
+            </div>
+            <div class="row">
+                <div class="chart-box pie-box col2">
+                    <h3>Spending Pie Chart</h3>
+                    <canvas id="pieChart" height="230"></canvas>
+                </div>
+                <div class="chart-box bar-box col2">
+                    <h3>Bar Chart by Category</h3>
+                    <canvas id="barChart" height="230"></canvas>
+                </div>
+            </div>
+            <div class="card slim" style="margin-top:16px;">
+                <h2>Income History</h2>
+                <table>
+                    <tr><th>Date</th><th>Amount</th></tr>
+                    {% for i in incomes %}
+                    <tr>
+                        <td>{{ i.date }}</td>
+                        <td>${{ '{:,.2f}'.format(i.amount) }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    let sidebarOpen = false;
+    function toggleSidebar() {
+        sidebarOpen = !sidebarOpen;
+        document.getElementById('sidebar').classList.toggle('open', sidebarOpen);
+    }
+    let lastScroll = 0;
+    window.addEventListener('scroll', function() {
+        let navbar = document.getElementById('navbar');
+        let currScroll = window.scrollY;
+        if (currScroll > lastScroll && currScroll > 60) { navbar.style.top = "-80px"; }
+        else { navbar.style.top = "0"; }
+        lastScroll = currScroll;
+    });
+    // Chart.js
+    const chartLabels = {{ chart_labels|tojson }};
+    const chartData = {{ chart_data|tojson }};
+    new Chart(document.getElementById('barChart'), {
+        type: 'bar',
+        data: {
+            labels: chartLabels,
+            datasets: [{
+                label: "Total",
+                data: chartData,
+                backgroundColor: "#444ce7",
+                borderRadius: 7,
+                borderSkipped: false,
+                barThickness: 38,
+                maxBarThickness: 52
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {legend:{labels:{color:'#e2e4ea'}}},
+            scales: {x:{ticks:{color:'#e2e4ea'}},y:{ticks:{color:'#e2e4ea'}}}
+        }
+    });
+    new Chart(document.getElementById('pieChart'), {
+        type: 'pie',
+        data: {
+            labels: chartLabels,
+            datasets: [{
+                data: chartData,
+                backgroundColor: [
+                    '#444ce7','#fb6868','#44d964','#ffd95a','#565af7','#ffe37a'
+                ]
+            }]
+        },
+        options: {responsive:true, plugins:{legend:{labels:{color:'#e2e4ea'}}}}
+    });
+    // Remove up/down on number inputs (income/expense)
+    document.querySelectorAll('input[type=number]').forEach(input => {
+        input.addEventListener('wheel', function(e){ e.preventDefault(); });
+        input.style.appearance = 'textfield';
+    });
+    // Reset income confirmation
+    function confirmResetIncome() {
+        if (confirm("Reset income to $0 and delete all income history?")) {
+            window.location.href = "/reset_income";
+        }
+    }
+</script>
+{% endblock %}
