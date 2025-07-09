@@ -1,80 +1,43 @@
 {% extends "base.html" %}
 {% block body %}
-<div class="center-container">
-    <form class="card edit-form" method="POST">
-        <h2>Edit Expense</h2>
-        <label for="category">Category:</label><br>
-        <select name="category" id="category" class="input-dark" required>
-            {% for cat in categories %}
-            <option value="{{ cat }}" {% if expense.category == cat %}selected{% endif %}>{{ cat }}</option>
-            {% endfor %}
-        </select><br>
-        <label for="amount">Amount:</label><br>
-        <input name="amount" id="amount" class="input-dark" type="number" step="0.01" min="0" value="{{ expense.amount }}" required autocomplete="off"><br>
-        <label for="description">Description:</label><br>
-        <input name="description" id="description" class="input-dark" type="text" maxlength="100" value="{{ expense.description or '' }}"><br>
-        <button type="submit" class="btn-main">Save</button>
-        <a href="{{ url_for('home') }}" class="btn-main btn-cancel">Cancel</a>
-    </form>
+<div class="navbar" id="navbar">
+    <button class="menu-btn" id="menuBtn" onclick="toggleSidebar()" aria-label="Menu">
+        <span class="menu-icon">&#9776;</span>
+    </button>
+    <span class="nav-title">Edit Expense</span>
 </div>
-<style>
-.center-container {
-    display: flex; justify-content: center; align-items: center; height: 90vh;
-}
-.edit-form {
-    background: #28292c;
-    border-radius: 16px;
-    box-shadow: 0 4px 32px rgba(0,0,0,.16);
-    padding: 2.2rem 2.2rem 1.3rem 2.2rem;
-    min-width: 320px;
-    max-width: 95vw;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-h2 {
-    font-size: 2.1rem;
-    margin-bottom: 1.4rem;
-    font-weight: 700;
-}
-label {
-    color: #ffd95a;
-    font-size: 1.08rem;
-    margin-top: 0.8rem;
-    margin-bottom: 0.15rem;
-    align-self: flex-start;
-}
-.input-dark {
-    background: #18191b;
-    color: #fff;
-    border: 1.5px solid #444ce7;
-    border-radius: 10px;
-    padding: 0.65rem 1.1rem;
-    font-size: 1.06rem;
-    outline: none;
-    transition: border .22s;
-    margin-bottom: .7rem;
-    width: 95%;
-}
-.input-dark:focus { border: 1.5px solid #44d964; }
-.btn-main {
-    background: #444ce7;
-    color: #fff;
-    border: none;
-    padding: 0.7rem 1.4rem;
-    border-radius: 8px;
-    font-size: 1.12rem;
-    cursor: pointer;
-    margin-top: 1rem;
-    margin-right: 10px;
-}
-.btn-main:hover { background: #393fb3; }
-.btn-cancel {
-    background: #232529;
-    color: #ffd95a;
-    margin-left: 12px;
-    border: 1.5px solid #ffd95a;
-}
-.btn-cancel:hover { background: #39394a; }
-</style>
+<nav class="sidebar" id="sidebar" aria-label="Sidebar">
+    <div class="slogo">💰 Budget Tracker</div>
+    <a href="/" class="slink">Dashboard</a>
+    <a href="/reset_password" class="slink">Reset Password</a>
+    <a href="/logout" class="logout slink">Logout</a>
+</nav>
+<div class="main-content" id="main-content">
+    <div class="card" style="max-width:430px;margin:auto;">
+        <h2>Edit Expense</h2>
+        {% if error %}
+            <div style="color:#fb6868;margin-bottom:.8rem;">{{ error }}</div>
+        {% endif %}
+        <form method="POST" action="{{ url_for('edit_expense', id=expense.id) }}">
+            <select name="category" class="input-dark category-select" required style="width:100%;padding:10px;margin-bottom:10px;">
+                <option value="">Select Category</option>
+                {% for cat in categories %}
+                <option value="{{cat}}" {% if expense.category == cat %}selected{% endif %}>{{cat}}</option>
+                {% endfor %}
+            </select>
+            <input name="amount" class="input-dark" type="number" step="0.01" min="0" value="{{expense.amount}}" required style="width:100%;padding:10px;margin-bottom:10px;">
+            <input name="description" class="input-dark" type="text" maxlength="100" value="{{expense.description or ''}}" placeholder="Description (memo)" style="width:100%;padding:10px;margin-bottom:10px;">
+            <button type="submit" class="btn-main" style="width:100%;">Save Changes</button>
+            <a href="/" class="btn-secondary" style="width:100%;margin-top:10px;display:inline-block;text-align:center;">Cancel</a>
+        </form>
+    </div>
+</div>
+<script>
+    // Mobile sidebar
+    let sidebarOpen = false;
+    function toggleSidebar() {
+        sidebarOpen = !sidebarOpen;
+        document.getElementById('sidebar').classList.toggle('open', sidebarOpen);
+    }
+</script>
 {% endblock %}
