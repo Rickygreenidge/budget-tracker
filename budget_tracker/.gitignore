@@ -1,0 +1,17 @@
+# Python cache and virtualenv
+__pycache__/
+*.pyc
+venv/
+
+# VS Code settings
+.vscode/
+
+# System files
+.DS_Store
+Thumbs.db
+*.parc
+
+# Don't add extensions or large binaries
+*.dll
+*.exe
+*.bin
