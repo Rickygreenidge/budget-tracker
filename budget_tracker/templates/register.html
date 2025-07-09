@@ -1,39 +1,31 @@
 {% extends "base.html" %}
 {% block body %}
 <div class="navbar" id="navbar">
-    <button class="menu-btn" id="menuBtn" onclick="toggleSidebar()" aria-label="Menu">
-        <span class="menu-icon">&#9776;</span>
-    </button>
-    <span class="nav-title">Register</span>
+    <span class="nav-title">Register - Budget Tracker</span>
 </div>
-<nav class="sidebar" id="sidebar" aria-label="Sidebar">
-    <div class="slogo">💰 Budget Tracker</div>
-    <a href="/login" class="slink">Login</a>
-    <a href="/register" class="slink active">Register</a>
-</nav>
-<div class="main-content" id="main-content">
-    <div class="card" style="max-width:430px;margin:auto;">
-        <h2>Register</h2>
-        {% if error %}
-            <div style="color:#fb6868; margin-bottom:.8rem;">{{ error }}</div>
-        {% endif %}
-        <form method="POST" action="{{ url_for('register') }}">
-            <input class="input-dark" type="text" name="username" placeholder="Username" required style="width:100%;padding:10px;margin-bottom:10px;">
-            <input class="input-dark" type="email" name="email" placeholder="Email" required style="width:100%;padding:10px;margin-bottom:10px;">
-            <input class="input-dark" type="password" name="password" placeholder="Password" required style="width:100%;padding:10px;margin-bottom:10px;">
+<div class="main-content" style="max-width:450px;margin:auto;padding-top:80px;">
+    <div class="card">
+        <h2 style="text-align:center;margin-bottom:1.3rem;">Create Account</h2>
+        <form method="POST" class="flex-form">
+            <input name="username" class="input-dark" type="text" placeholder="Username" required autocomplete="username">
+            <input name="email" class="input-dark" type="email" placeholder="Email" required autocomplete="email">
+            <input name="password" class="input-dark" type="password" placeholder="Password" required autocomplete="new-password">
+            <input name="confirm_password" class="input-dark" type="password" placeholder="Confirm Password" required autocomplete="new-password">
             <button type="submit" class="btn-main" style="width:100%;">Register</button>
         </form>
-        <div style="margin-top:8px;text-align:center;">
-            <a href="/login" style="color:#44d964;">Already have an account? Login</a>
+        <div style="margin-top:16px;text-align:center;">
+            <a href="{{ url_for('login') }}" style="color:#44d964;">Already have an account?</a>
         </div>
+        {% if error %}
+        <div style="margin-top:14px;color:#fb6868;font-weight:600;text-align:center;">{{ error }}</div>
+        {% endif %}
     </div>
 </div>
-<script>
-    // Mobile sidebar
-    let sidebarOpen = false;
-    function toggleSidebar() {
-        sidebarOpen = !sidebarOpen;
-        document.getElementById('sidebar').classList.toggle('open', sidebarOpen);
-    }
-</script>
+<style>
+@media (max-width: 520px) {
+    .main-content { padding-top:55px !important; }
+    .card { padding: 2vw !important; }
+    .input-dark, .btn-main { width:100%; margin:0 0 10px 0 !important;}
+}
+</style>
 {% endblock %}

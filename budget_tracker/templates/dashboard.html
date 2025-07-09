@@ -17,22 +17,22 @@
     <div class="dashboard-section row">
         <div class="card col2">
             <h2>Add/Update Income</h2>
-            <form method="POST" action="{{ url_for('add_income') }}" style="display:flex;flex-wrap:wrap;align-items:center;">
+            <form method="POST" action="{{ url_for('add_income') }}" class="flex-form">
                 <input name="amount" class="input-dark" type="number" step="0.01" min="0" placeholder="Income Amount" required autocomplete="off">
                 <button type="submit" class="btn-main">Add/Update</button>
                 <button type="button" class="btn-red" onclick="confirmResetIncome()">Reset Income</button>
             </form>
-            <div style="margin-top:0.8rem;">Current Total Income: <span style="color:#44d964;font-weight:700;">${{ '{:,.2f}'.format(total_income) }}</span></div>
+            <div class="income-info">Current Total Income: <span class="income-highlight">${{ '{:,.2f}'.format(total_income) }}</span></div>
         </div>
         <div class="card col2 slim">
             <h2 style="margin-bottom:.8rem;">Remaining Balance</h2>
             <div class="spending">${{ '{:,.2f}'.format(remaining) }}</div>
-            <div style="font-size:1rem;color:#aaa;">Income minus all expenses</div>
+            <div class="subtext">Income minus all expenses</div>
         </div>
     </div>
     <div class="dashboard-section card">
         <h2>Add Expense</h2>
-        <form method="POST" action="{{ url_for('add_expense') }}" style="display:flex;flex-wrap:wrap;align-items:center;">
+        <form method="POST" action="{{ url_for('add_expense') }}" class="flex-form">
             <select name="category" class="input-dark category-select" required>
                 <option value="">Select Category</option>
                 {% for cat in categories %}
@@ -48,45 +48,45 @@
         <div class="card col1">
             <h2>All Expenses</h2>
             <div class="table-responsive">
-            <table>
-                <tr>
-                    <th>Date</th>
-                    <th>Category</th>
-                    <th>Amount ($)</th>
-                    <th>Description</th>
-                    <th>Actions</th>
-                </tr>
-                {% for e in expenses %}
-                <tr>
-                    <td>{{e.date}}</td>
-                    <td>{{e.category}}</td>
-                    <td>${{ '{:,.2f}'.format(e.amount) }}</td>
-                    <td>{{e.description or ""}}</td>
-                    <td>
-                        <a href="/edit/{{e.id}}" style="color:#44d964;">Edit</a>
-                        <a href="/delete/{{e.id}}" style="color:#ff6464;margin-left:8px;">Delete</a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </table>
-            </div>
-        </div>
-        <div class="col2">
-            <div class="card slim" style="margin-bottom:16px;">
-                <h2>Totals by Category</h2>
-                <div class="table-responsive">
                 <table>
-                    <tr><th>Category</th><th>Total ($)</th></tr>
-                    {% for cat, total in totals_by_category.items() %}
                     <tr>
-                        <td>{{cat}}</td>
-                        <td>${{ '{:,.2f}'.format(total) }}</td>
+                        <th>Date</th>
+                        <th>Category</th>
+                        <th>Amount ($)</th>
+                        <th>Description</th>
+                        <th>Actions</th>
+                    </tr>
+                    {% for e in expenses %}
+                    <tr>
+                        <td>{{e.date}}</td>
+                        <td>{{e.category}}</td>
+                        <td>${{ '{:,.2f}'.format(e.amount) }}</td>
+                        <td>{{e.description or ""}}</td>
+                        <td>
+                            <a href="/edit/{{e.id}}" class="edit-link">Edit</a>
+                            <a href="/delete/{{e.id}}" class="delete-link">Delete</a>
+                        </td>
                     </tr>
                     {% endfor %}
                 </table>
+            </div>
+        </div>
+        <div class="col2">
+            <div class="card slim">
+                <h2>Totals by Category</h2>
+                <div class="table-responsive">
+                    <table>
+                        <tr><th>Category</th><th>Total ($)</th></tr>
+                        {% for cat, total in totals_by_category.items() %}
+                        <tr>
+                            <td>{{cat}}</td>
+                            <td>${{ '{:,.2f}'.format(total) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </table>
                 </div>
             </div>
-            <div class="card slim" style="margin-bottom:16px;">
+            <div class="card slim">
                 <h2>Overall Total Spending</h2>
                 <div class="spending-total">${{ '{:,.2f}'.format(total_spent) }}</div>
             </div>
@@ -100,197 +100,231 @@
                     <canvas id="barChart" height="230"></canvas>
                 </div>
             </div>
-            <div class="card slim" style="margin-top:16px;">
+            <div class="card slim">
                 <h2>Income History</h2>
                 <div class="table-responsive">
-                <table>
-                    <tr><th>Date</th><th>Amount</th></tr>
-                    {% for i in incomes %}
-                    <tr>
-                        <td>{{i.date}}</td>
-                        <td>${{ '{:,.2f}'.format(i.amount) }}</td>
-                    </tr>
-                    {% endfor %}
-                </table>
+                    <table>
+                        <tr><th>Date</th><th>Amount</th></tr>
+                        {% for i in incomes %}
+                        <tr>
+                            <td>{{i.date}}</td>
+                            <td>${{ '{:,.2f}'.format(i.amount) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </table>
                 </div>
             </div>
         </div>
     </div>
 </div>
 <style>
-    /* --- Responsive Sidebar and Navbar --- */
-    .navbar {
-        width: 100vw;
-        background: #22232a;
-        display: flex;
-        align-items: center;
-        padding: 0 1.5rem 0 0;
-        height: 64px;
-        box-shadow: 0 1px 8px rgba(0,0,0,.08);
-        position: fixed;
-        top: 0; left: 0; z-index: 100;
-        transition: top 0.4s;
-    }
-    .menu-btn {
-        margin-left: 2.2rem;
-        margin-top: .3rem;
-        background: #26282c;
-        border-radius: 18px;
-        width: 48px;
-        height: 48px;
-        border: none;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        z-index: 102;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.10);
-        font-size: 2rem;
-        transition: box-shadow .2s;
-    }
-    .menu-btn:focus { outline: 2px solid #444ce7; }
-    .menu-icon { color: #fff; font-size: 2rem; pointer-events: none; margin-top: 4px; }
-    .nav-title {
-        font-size: 2rem;
-        font-weight: 700;
-        margin-left: 1.1rem;
-        letter-spacing: 0.5px;
-        color: #e2e4ea;
-        flex: 1;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-    .sidebar {
-        position: fixed;
-        top: 0;
-        left: -255px;
-        width: 220px;
-        height: 100vh;
-        background: #22232a;
-        box-shadow: 4px 0 32px rgba(0,0,0,.12);
-        z-index: 120;
-        transition: left .33s;
-        padding-top: 80px;
-        display: flex;
-        flex-direction: column;
-    }
-    .sidebar.open { left: 0; }
-    .sidebar .slogo { font-size: 1.3rem; font-weight: bold; color: #ffe37a; margin-bottom: 2.2rem; display: flex; align-items: center; gap: .5rem; }
-    .sidebar .username { font-size: 1.1rem; margin-bottom: .9rem; color: #fff6b2; font-weight: 700; }
-    .sidebar a, .sidebar .slink {
-        display: block;
-        color: #e2e4ea;
-        padding: 15px 26px 15px 26px;
-        text-decoration: none;
-        font-size: 1.05rem;
-        border-radius: 8px;
-        margin: 3px 0;
-        transition: background .17s;
-    }
-    .sidebar a.active, .sidebar a:hover { background: #565af7; color: #fff; }
-    .sidebar .logout { color: #ff8282 !important; }
-    .sidebar .logout:hover { background: #2d1212; }
-    .sidebar .resetpw { color: #ffe37a !important; }
-    .sidebar .resetpw:hover { background: #3d3d20; color: #fff; }
-    .main-content {
-        margin-left: 0;
-        margin-top: 70px;
-        padding: 16px 8px;
-        transition: margin-left .34s;
-    }
-    .card {
-        background: #28292c;
-        border-radius: 16px;
-        box-shadow: 0 4px 32px rgba(0,0,0,.16);
-        padding: 1.2rem 1.2rem 1.1rem 1.2rem;
-        margin-bottom: 18px;
-    }
-    .card.slim { padding: 1.1rem 1.3rem; }
-    .row { display: flex; flex-wrap: wrap; gap: 18px; }
-    .col2 { flex: 1 1 270px; }
-    .col1 { flex: 1 1 480px; }
-    .dashboard-section { margin-bottom: 1.1rem; }
-    h2 { font-size: 1.2rem; margin-bottom: 1.0rem; }
-    h3 { font-size: 1.1rem; }
-    .input-dark {
-        background: #18191b;
-        color: #fff;
-        border: 1.5px solid #444ce7;
-        border-radius: 10px;
-        padding: 0.45rem 1rem;
-        font-size: 1.01rem;
-        outline: none;
-        transition: border .22s;
-        margin-right: 1.2rem;
-        margin-bottom: .7rem;
-        width: 140px;
-        max-width: 98vw;
-    }
-    .input-dark:focus { border: 1.5px solid #44d964; }
-    .input-dark[type="number"]::-webkit-outer-spin-button,
-    .input-dark[type="number"]::-webkit-inner-spin-button {
-        -webkit-appearance: none;
-        margin: 0;
-    }
-    .input-dark[type="number"] { -moz-appearance: textfield; }
-    .btn-main {
-        background: #444ce7;
-        color: #fff;
-        border: none;
-        padding: 0.4rem 1rem;
-        border-radius: 8px;
-        font-size: 1rem;
-        cursor: pointer;
-        margin-left: 0.6rem;
-        margin-top: 2px;
-        transition: background .2s;
-    }
-    .btn-main:hover { background: #393fb3; }
-    .btn-red {
-        background: #fb6868;
-        color: #fff;
-        border: none;
-        padding: 0.35rem 1rem;
-        border-radius: 7px;
-        font-size: .98rem;
-        cursor: pointer;
-        margin-left: .75rem;
-        transition: background .2s;
-    }
-    .btn-red:hover { background: #d64242; }
-    .category-select { width: 110px; }
-    table { width: 100%; border-collapse: collapse; font-size: 0.99rem; }
-    th, td { padding: 7px 8px; text-align: left; }
-    th { background: #232529; color: #ffe37a; }
-    tr:nth-child(even) { background: #26282c; }
-    tr:nth-child(odd) { background: #232529; }
-    td, th { border-bottom: 1px solid #202126; }
-    .table-responsive { overflow-x: auto; width: 100%; }
-    .chart-box { background: #232529; border-radius: 14px; padding: 0.8rem 0.5rem; margin-top: 10px;}
-    .spending { color: #44d964; font-size: 1.3rem; margin: 0.1rem 0; }
-    .spending-total { color: #ffd95a; font-size: 1.2rem; font-weight: 700;}
-    .pie-box, .bar-box { min-width: 150px; }
-    @media (max-width: 900px) {
-        .row { flex-direction: column; }
-        .main-content { padding: 12px 2vw; }
-        .col2, .col1 { flex: 1 1 100%; }
-        .navbar, .sidebar { font-size: 1rem; }
-    }
-    @media (max-width: 700px) {
-        .main-content { margin-top: 58px; padding: 6px 1vw; }
-        .card, .chart-box { padding: 0.6rem 2vw 0.7rem 2vw; }
-        .sidebar { width: 80vw; min-width: 120px; }
-        .nav-title { font-size: 1.1rem; }
-        .card { font-size: 0.98rem; }
-        .input-dark { font-size: 0.92rem; }
-    }
-    @media (max-width: 480px) {
-        .main-content { padding: 0; }
-        .card, .chart-box { padding: 2vw; }
-        .sidebar { width: 99vw; min-width: 80px; }
-        .card { font-size: 0.91rem; }
-    }
+:root {
+    --side-width: 220px;
+    --nav-height: 64px;
+    --radius: 15px;
+}
+body, html {
+    width: 100vw;
+    max-width: 100vw;
+    overflow-x: hidden;
+}
+.navbar {
+    width: 100vw;
+    background: #22232a;
+    display: flex;
+    align-items: center;
+    padding: 0 1.5rem 0 0;
+    height: var(--nav-height);
+    box-shadow: 0 1px 8px rgba(0,0,0,.08);
+    position: fixed;
+    top: 0; left: 0; z-index: 100;
+    transition: top 0.4s;
+}
+.menu-btn {
+    margin-left: 2.2rem;
+    margin-top: .3rem;
+    background: #26282c;
+    border-radius: 18px;
+    width: 48px;
+    height: 48px;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 102;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.10);
+    font-size: 2rem;
+    transition: box-shadow .2s;
+}
+.menu-btn:focus { outline: 2px solid #444ce7; }
+.menu-icon { color: #fff; font-size: 2rem; pointer-events: none; margin-top: 4px; }
+.nav-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-left: 1.1rem;
+    letter-spacing: 0.5px;
+    color: #e2e4ea;
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: -255px;
+    width: var(--side-width);
+    max-width: 85vw;
+    height: 100vh;
+    background: #22232a;
+    box-shadow: 4px 0 32px rgba(0,0,0,.12);
+    z-index: 120;
+    transition: left .33s;
+    padding-top: 80px;
+    display: flex;
+    flex-direction: column;
+}
+.sidebar.open { left: 0; }
+.sidebar .slogo { font-size: 1.3rem; font-weight: bold; color: #ffe37a; margin-bottom: 2.2rem; display: flex; align-items: center; gap: .5rem; }
+.sidebar .username { font-size: 1.1rem; margin-bottom: .9rem; color: #fff6b2; font-weight: 700; }
+.sidebar a, .sidebar .slink {
+    display: block;
+    color: #e2e4ea;
+    padding: 15px 26px 15px 26px;
+    text-decoration: none;
+    font-size: 1.05rem;
+    border-radius: 8px;
+    margin: 3px 0;
+    transition: background .17s;
+}
+.sidebar a.active, .sidebar a:hover { background: #565af7; color: #fff; }
+.sidebar .logout { color: #ff8282 !important; }
+.sidebar .logout:hover { background: #2d1212; }
+.sidebar .resetpw { color: #ffe37a !important; }
+.sidebar .resetpw:hover { background: #3d3d20; color: #fff; }
+.main-content {
+    margin-left: 0;
+    margin-top: var(--nav-height);
+    padding: 16px 8px;
+    transition: margin-left .34s;
+    max-width: 100vw;
+    overflow-x: hidden;
+}
+.card {
+    background: #28292c;
+    border-radius: var(--radius);
+    box-shadow: 0 4px 32px rgba(0,0,0,.16);
+    padding: 1.2rem 1.2rem 1.1rem 1.2rem;
+    margin-bottom: 18px;
+    max-width: 100vw;
+    overflow-x: auto;
+}
+.card.slim { padding: 1.1rem 1.3rem; }
+.row { display: flex; flex-wrap: wrap; gap: 18px; }
+.col2 { flex: 1 1 270px; }
+.col1 { flex: 1 1 480px; }
+.dashboard-section { margin-bottom: 1.1rem; }
+h2 { font-size: 1.2rem; margin-bottom: 1.0rem; }
+h3 { font-size: 1.1rem; }
+.input-dark {
+    background: #18191b;
+    color: #fff;
+    border: 1.5px solid #444ce7;
+    border-radius: 10px;
+    padding: 0.45rem 1rem;
+    font-size: 1.01rem;
+    outline: none;
+    transition: border .22s;
+    margin-right: 1.2rem;
+    margin-bottom: .7rem;
+    width: 140px;
+    max-width: 99vw;
+    box-sizing: border-box;
+}
+.input-dark:focus { border: 1.5px solid #44d964; }
+.input-dark[type="number"]::-webkit-outer-spin-button,
+.input-dark[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.input-dark[type="number"] { -moz-appearance: textfield; }
+.flex-form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 7px;
+}
+.income-info { margin-top:0.8rem; font-size: 1rem;}
+.income-highlight { color:#44d964;font-weight:700;}
+.spending { color: #44d964; font-size: 1.3rem; margin: 0.1rem 0; }
+.spending-total { color: #ffd95a; font-size: 1.2rem; font-weight: 700;}
+.subtext { font-size: 1rem;color:#aaa;}
+.edit-link { color:#44d964; text-decoration:underline;}
+.delete-link { color:#ff6464;margin-left:8px; text-decoration:underline;}
+.btn-main {
+    background: #444ce7;
+    color: #fff;
+    border: none;
+    padding: 0.4rem 1rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-left: 0.6rem;
+    margin-top: 2px;
+    transition: background .2s;
+}
+.btn-main:hover { background: #393fb3; }
+.btn-red {
+    background: #fb6868;
+    color: #fff;
+    border: none;
+    padding: 0.35rem 1rem;
+    border-radius: 7px;
+    font-size: .98rem;
+    cursor: pointer;
+    margin-left: .75rem;
+    transition: background .2s;
+}
+.btn-red:hover { background: #d64242; }
+.category-select { width: 110px; }
+.table-responsive { overflow-x: auto; width: 100%; }
+table { width: 100%; border-collapse: collapse; font-size: 0.99rem; }
+th, td { padding: 7px 8px; text-align: left; }
+th { background: #232529; color: #ffe37a; }
+tr:nth-child(even) { background: #26282c; }
+tr:nth-child(odd) { background: #232529; }
+td, th { border-bottom: 1px solid #202126; }
+.chart-box { background: #232529; border-radius: 14px; padding: 0.8rem 0.5rem; margin-top: 10px;}
+.pie-box, .bar-box { min-width: 150px; }
+/* --- MOBILE BREAKPOINTS --- */
+@media (max-width: 900px) {
+    .row { flex-direction: column; }
+    .main-content { padding: 10px 1vw; }
+    .col2, .col1 { flex: 1 1 100%; }
+    .navbar, .sidebar { font-size: 1rem; }
+}
+@media (max-width: 700px) {
+    .main-content { margin-top: 55px; padding: 5px 1vw; }
+    .card, .chart-box { padding: 0.7rem 2vw 0.7rem 2vw; }
+    .sidebar { width: 80vw; min-width: 120px; }
+    .nav-title { font-size: 1.1rem; }
+    .card { font-size: 0.98rem; }
+    .input-dark { font-size: 0.92rem; }
+    .menu-btn { margin-left: 1vw; width: 40px; height: 40px; font-size: 1.4rem;}
+}
+@media (max-width: 520px) {
+    .main-content { padding: 0 0 !important; }
+    .card, .chart-box { padding: 2vw !important; font-size: .91rem !important;}
+    .sidebar { width: 98vw !important; min-width: 80px; font-size: 1rem;}
+    .table-responsive { overflow-x: auto; width: 99vw;}
+    table, th, td { font-size: 0.94rem !important; }
+    .nav-title { font-size: 1rem !important; }
+    .menu-btn { margin-left: 1vw; width: 36px; height: 36px; font-size: 1.2rem;}
+    .flex-form { flex-direction: column; align-items: stretch; gap: 4px;}
+    .input-dark, .category-select, .btn-main, .btn-red { width: 100%; margin: 0 0 6px 0 !important; }
+}
+@media (max-width: 400px) {
+    .card, .main-content, .table-responsive { padding: 0 2px !important; }
+    h2, h3 { font-size: 1rem;}
+}
 </style>
 <script>
     let sidebarOpen = false;
